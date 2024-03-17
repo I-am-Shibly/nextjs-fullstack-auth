@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { User } from '@/models/User';
 import bcrypt from 'bcrypt';
 import { DBconnect } from '../../../../helpers/DBconnect.js';
+import { sendEmail } from '../../../../helpers/mailer';
 
 export const POST = async (req: NextRequest) => {
   try {
@@ -14,7 +15,7 @@ export const POST = async (req: NextRequest) => {
       return NextResponse.json(
         { error: 'User already exists with this email' },
         { status: 400 }
-      );
+      )
     }
 
     // hash password
@@ -28,6 +29,9 @@ export const POST = async (req: NextRequest) => {
     });
 
     const savedUser = await newUser.save();
+
+    // verification email
+    await sendEmail({ email, emailType: 'VERIFY', userId: savedUser._id });
 
     return NextResponse.json({
       message: 'User has been created successfully.',
